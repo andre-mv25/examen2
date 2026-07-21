@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convertidor Litros a Galones</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .card { background: white; border-radius: 12px; padding: 32px; width: 100%; max-width: 420px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+    h1 { font-size: 20px; color: #333; margin-bottom: 8px; }
+    p { color: #666; font-size: 14px; margin-bottom: 20px; }
+    label { display: block; font-size: 14px; color: #555; margin-bottom: 4px; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin-bottom: 16px; }
+    input:focus { outline: none; border-color: #4a90d9; }
+    button { width: 100%; background: #4a90d9; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; cursor: pointer; }
+    button:hover { background: #357abd; }
+    .resultado { margin-top: 20px; padding: 16px; background: #f0f8ff; border-radius: 8px; display: none; }
+    .resultado h3 { font-size: 14px; color: #333; margin-bottom: 8px; }
+    .resultado p { font-size: 13px; color: #555; margin-bottom: 4px; }
+    .resultado .valor { font-weight: bold; color: #2c7a4d; }
+    .error { margin-top: 20px; padding: 12px; background: #fff0f0; border-radius: 8px; color: #c0392b; font-size: 14px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Convertidor de Leche</h1>
+    <p>Convierte litros a galones y calcula tu pago</p>
+    <form id="form">
+      <label for="litros">Litros producidos</label>
+      <input type="number" id="litros" step="0.01" min="0" placeholder="Ej: 100" required>
+      <label for="precio">Precio por galón ($)</label>
+      <input type="number" id="precio" step="0.01" min="0" placeholder="Ej: 50">
+      <button type="submit">Calcular</button>
+    </form>
+    <div id="resultado" class="resultado"></div>
+    <div id="error" class="error"></div>
+  </div>
+  <script>
+    const form = document.getElementById('form');
+    const resultadoDiv = document.getElementById('resultado');
+    const errorDiv = document.getElementById('error');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorDiv.style.display = 'none';
+      resultadoDiv.style.display = 'none';
+      const litros = document.getElementById('litros').value;
+      const precio = document.getElementById('precio').value;
+      const params = new URLSearchParams({ litros });
+      if (precio) params.set('precioPorGalon', precio);
+      try {
+        const res = await fetch('/convertir?' + params.toString());
+        const data = await res.json();
+        if (data.error) {
+          errorDiv.textContent = data.error;
+          errorDiv.style.display = 'block';
+          return;
+        }
+        resultadoDiv.innerHTML = '<h3>Resultado</h3>'
+          + '<p>Litros: <span class="valor">' + data.litros + '</span></p>'
+          + '<p>Galones: <span class="valor">' + data.galones + '</span></p>'
+          + (data.pagoTotal !== undefined ? '<p>Pago total: <span class="valor">$' + data.pagoTotal + '</span></p>' : '')
+          + '<p style="font-size:12px;color:#999;margin-top:8px">1 galón = 3.785 litros</p>';
+        resultadoDiv.style.display = 'block';
+      } catch (err) {
+        errorDiv.textContent = 'Error al conectar con el servidor';
+        errorDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
